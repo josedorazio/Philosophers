@@ -6,7 +6,7 @@
 /*   By: jdorazio <jdorazio@student.42.madrid.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/19 14:52:42 by jdorazio          #+#    #+#             */
-/*   Updated: 2025/05/19 15:42:12 by jdorazio         ###   ########.fr       */
+/*   Updated: 2025/05/25 17:22:44 by jdorazio         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ void	init_philos(t_data *data)
 	{
 		data->philos[i].id = i + 1;
 		data->philos[i].eating = 0;
-		data->philos[i].meales_eaten = 0;
+		data->philos[i].meals_eaten = 0;
 		data->philos[i].last_meal = 0;
 		data->philos[i].data = data;
 		pthread_mutex_init(&data->philos[i].meal_lock, NULL);
@@ -74,9 +74,13 @@ void	init_data(t_data *data, char **av)
 	data->time_to_eat = ft_atoi(av[3]);
 	data->time_to_sleep = ft_atoi(av[4]);
 	data->start_time = get_current_time();
-	printf("time = %ld\n", data->start_time);
 	if (av[5])
 		data->meals_required = ft_atoi(av[5]);
+	data->simulation_running = 1;
+	data->simulation_lock = malloc(sizeof(pthread_mutex_t));
+	if (!data->simulation_lock)
+		exit(EXIT_FAILURE);
+	pthread_mutex_init(data->simulation_lock, NULL);
 	init_philos(data);
 	init_forks(data);
 }
