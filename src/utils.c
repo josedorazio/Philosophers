@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jdorazio <jdorazio@student.42.madrid.co    +#+  +:+       +#+        */
+/*   By: jdorazio <jdorazio@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/11 16:38:14 by jdorazio          #+#    #+#             */
-/*   Updated: 2025/05/19 15:42:41 by jdorazio         ###   ########.fr       */
+/*   Updated: 2025/07/13 22:48:26 by jdorazio         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,18 +43,16 @@ void	error_message(char *error)
 	exit(EXIT_FAILURE);
 }
 
-void	check_av(char **av)
+void	check_av(int ac, char **av)
 {
-	// check number of philo
+	if (ac != 5 && ac != 6)
+		error_message("Number of arguments not 4 or 5.");
 	if (ft_atoi(av[1]) < 1||ft_atoi(av[1]) > PHILO_MAX)
 		error_message("Num. Philo. must be between 1 - 200");
-	// check time to die
 	if (ft_atoi(av[2]) <= 0)
 		error_message("time to die must be bigger than 0");
-	// check time to eat
 	if (ft_atoi(av[3]) <= 0)
 		error_message("time to eat must be bigger than 0");
-	// check time to sleep
 	if (ft_atoi(av[4]) <= 0)
 		error_message("time to sleep must be bigger than 0");
 	if (av[5] && (ft_atoi(av[5]) < 0))
@@ -70,3 +68,4 @@ size_t	get_current_time(void)
 		error_message("failed to gettimeofday()");
 	return(tv.tv_sec * 1000 + tv.tv_usec / 1000);
 }
+

@@ -3,21 +3,23 @@
 /*                                                        :::      ::::::::   */
 /*   init.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jdorazio <jdorazio@student.42.madrid.co    +#+  +:+       +#+        */
+/*   By: jdorazio <jdorazio@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/19 14:52:42 by jdorazio          #+#    #+#             */
-/*   Updated: 2025/05/25 17:22:44 by jdorazio         ###   ########.fr       */
+/*   Updated: 2025/07/13 20:41:27 by jdorazio         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "../inc/philo.h"
 
-void	init_philos(t_data *data)
+static void	init_philos(t_sim *data)
 {
 	size_t	i;
+	size_t	num_philos;
 
+	num_philos = data->num_of_philos; 
 	i = 0;
-	data->philos = malloc(data->num_of_philos * sizeof(t_philo));
+	data->philos = malloc(num_philos * sizeof(t_philo));
 	if (!data->philos)
 		error_message("failed philos allocation.");
 	while (i < data->num_of_philos)
@@ -25,32 +27,17 @@ void	init_philos(t_data *data)
 		data->philos[i].id = i + 1;
 		data->philos[i].eating = 0;
 		data->philos[i].meals_eaten = 0;
-		data->philos[i].last_meal = 0;
+		data->philos[i].is_dead = false;
+		data->philos[i].last_meal = get_current_time();
 		data->philos[i].data = data;
+		data->philos[i].left_fork = &data->forks[i];
+		data->philos[i].right_fork = &data->forks[(i + 1) % num_philos];
 		pthread_mutex_init(&data->philos[i].meal_lock, NULL);
 		i++;
 	}
 }
 
-void	assign_forks(t_data *data)
-{
-	size_t	i;
-	size_t	philos;
-
-	i = 0;
-	philos = data->num_of_philos;
-	while (i < philos)
-	{
-		// assign left fork to philo
-		data->philos[i].left_fork = &data->forks[i];
-		// assign right fork to philo. Think about it like a circular list
-		data->philos[i].right_fork = &data->forks[(i + 1) % philos];
-		i++;
-	}
-}
-
-
-void init_forks(t_data *data)
+static void	init_forks(t_sim *data)
 {
 	size_t	i;
 
@@ -63,24 +50,27 @@ void init_forks(t_data *data)
 		pthread_mutex_init(&data->forks[i], NULL);
 		i++;
 	}
-	assign_forks(data);
 }
 
-
-void	init_data(t_data *data, char **av)
+static void	parse_args(t_sim *data, char **av)
 {
 	data->num_of_philos = ft_atoi(av[1]);
 	data->time_to_die = ft_atoi(av[2]);
 	data->time_to_eat = ft_atoi(av[3]);
 	data->time_to_sleep = ft_atoi(av[4]);
-	data->start_time = get_current_time();
+	data->meals_required = -1;
 	if (av[5])
 		data->meals_required = ft_atoi(av[5]);
 	data->simulation_running = 1;
-	data->simulation_lock = malloc(sizeof(pthread_mutex_t));
-	if (!data->simulation_lock)
-		exit(EXIT_FAILURE);
-	pthread_mutex_init(data->simulation_lock, NULL);
-	init_philos(data);
+}
+
+void	init_sim(t_sim *data, char **av)
+{
+	parse_args(data, av);
+	if (pthread_mutex_init(&data->simulation_lock, NULL) != 0)
+		error_message("failed fork allocation");
+	if (pthread_mutex_init(&data->print_lock, NULL) != 0)
+		error_message("failed fork allocation");
 	init_forks(data);
+	init_philos(data);
 }
