@@ -51,21 +51,35 @@ void	create_thread(t_sim *data)
 	{
 		if (pthread_create(&data->philos[i].thread, NULL,
 			&routine, &data->philos[i]) != 0)
+		{
+
 			clear_threads(data);
+			error_message("falied to create thread");
+		}
 		i++;
 	}
 	if (num_philos > 1)
 		if (pthread_create(&monitor, NULL, &routine_monitor, data) != 0)
+		{
+
 			clear_threads(data);
-	i = 0;
+			error_message("falied to create thread");
+		}	i = 0;
 	while (i < num_philos)
 	{
 		if (pthread_join(data->philos[i].thread, NULL) != 0)
+		{
+
 			clear_threads(data);
-		i++;
+			error_message("falied to create thread");
+		}		i++;
 	}
 	if (pthread_join(monitor, NULL) != 0)
+		{
+
 			clear_threads(data);
+			error_message("falied to create thread");
+		}
 }
 
 // ./philo 5 800 200 200 [5]
@@ -73,7 +87,7 @@ int	main(int ac, char **av)
 {
 	t_sim	data;
 
-	check_av(ac, av);	
+	check_av(ac, av);
 	init_sim(&data, av);
 	create_thread(&data);
 	clear_threads(&data);

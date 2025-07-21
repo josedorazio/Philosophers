@@ -25,9 +25,7 @@ static void	init_philos(t_sim *data)
 	while (i < data->num_of_philos)
 	{
 		data->philos[i].id = i + 1;
-		data->philos[i].eating = 0;
 		data->philos[i].meals_eaten = 0;
-		data->philos[i].is_dead = false;
 		data->philos[i].last_meal = get_current_time();
 		data->philos[i].data = data;
 		data->philos[i].left_fork = &data->forks[i];
@@ -47,7 +45,8 @@ static void	init_forks(t_sim *data)
 	i = 0;
 	while (i < data->num_of_philos)
 	{
-		pthread_mutex_init(&data->forks[i], NULL);
+		if (pthread_mutex_init(&data->forks[i], NULL) != 0)
+			error_message("failed to init fork");
 		i++;
 	}
 }
@@ -61,6 +60,7 @@ static void	parse_args(t_sim *data, char **av)
 	data->meals_required = -1;
 	if (av[5])
 		data->meals_required = ft_atoi(av[5]);
+	data->start_time = get_current_time();
 	data->simulation_running = 1;
 }
 
@@ -70,7 +70,10 @@ void	init_sim(t_sim *data, char **av)
 	if (pthread_mutex_init(&data->simulation_lock, NULL) != 0)
 		error_message("failed fork allocation");
 	if (pthread_mutex_init(&data->print_lock, NULL) != 0)
+	{
+		pthread_mutex_destroy(&data->simulation_lock);
 		error_message("failed fork allocation");
+	}
 	init_forks(data);
 	init_philos(data);
 }

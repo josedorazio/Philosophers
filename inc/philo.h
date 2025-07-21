@@ -29,24 +29,18 @@ typedef struct s_philo t_philo;
 typedef struct s_program t_program;
 typedef struct s_sim t_sim;
 
-
 // each philo will have it's own struct
 typedef struct s_philo
 {
 	// philo id
 	pthread_t	thread;
 	int			id;
-	// state
-	bool		eating; // TRUE (eating) | FALSE(not eating)
-	bool		is_dead;
 	int		meals_eaten;
-	size_t		last_meal;
-	t_sim		*data;
-	// forks
+	size_t	last_meal;
+	t_sim	*data;
 	pthread_mutex_t	*left_fork;
 	pthread_mutex_t	*right_fork;
-	// Sync
-	pthread_mutex_t	meal_lock; // protets last_meal and meals eaten
+	pthread_mutex_t	meal_lock;
 } t_philo;
 
 typedef struct s_sim
@@ -55,9 +49,9 @@ typedef struct s_sim
 	size_t		time_to_die;
 	size_t		time_to_eat;
 	size_t		time_to_sleep;
+	size_t		start_time;
 	int			meals_required;
 	int			simulation_running;
-	size_t		start_time;
 	t_philo		*philos;
 	pthread_mutex_t	*forks;
 	pthread_mutex_t	print_lock;
@@ -82,4 +76,10 @@ void	*routine_monitor(void *args);
 // ##--- UTILLSINIT ---##
 void	*routine(void *args);
 // ## ---------- ##
+
+size_t	timestamp(t_philo *philo);
+void	print_action(char *s, t_philo *philo);
+void	ft_usleep(int mls);
+int	running_sim(t_sim *data);
+
 # endif

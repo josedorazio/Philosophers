@@ -13,7 +13,7 @@
 NAME = philo
 #  find *.c | xargs echo
 
-SRCS =  src/main.c src/utils.c src/init.c src/actions.c
+SRCS =  src/main.c src/utils.c src/init.c src/actions.c src/monitor.c
 OBJS = $(SRCS:.c=.o)
 
 CC = cc

@@ -59,7 +59,6 @@ void	check_av(int ac, char **av)
 		error_message("invalid number of eating times\n"); 
 }
 
-
 size_t	get_current_time(void)
 {
 	struct timeval tv;
@@ -69,3 +68,21 @@ size_t	get_current_time(void)
 	return(tv.tv_sec * 1000 + tv.tv_usec / 1000);
 }
 
+void	print_action(char *s, t_philo *philo)
+{
+	size_t	time;
+
+	time = get_current_time() - philo->data->start_time ;
+	pthread_mutex_lock(&philo->data->print_lock);
+	printf("TS[%zu] -> Philo[%d] %s \n", time, philo->id, s);
+	pthread_mutex_unlock(&philo->data->print_lock);
+}
+
+void	ft_usleep(int mls)
+{
+	size_t	start;
+
+	start = get_current_time();
+	while ((get_current_time() - start) < (size_t) mls)
+		usleep(10);
+}
