@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: jdorazio <jdorazio@student.42madrid.com    +#+  +:+       +#+         #
+#    By: jdorazio <jdorazio@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/09/19 15:33:02 by jdorazio          #+#    #+#              #
-#    Updated: 2024/09/28 15:48:26 by jdorazio         ###   ########.fr        #
+#    Updated: 2025/07/30 18:45:08 by jdorazio         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 

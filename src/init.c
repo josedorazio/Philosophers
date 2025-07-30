@@ -6,18 +6,18 @@
 /*   By: jdorazio <jdorazio@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/19 14:52:42 by jdorazio          #+#    #+#             */
-/*   Updated: 2025/07/13 20:41:27 by jdorazio         ###   ########.fr       */
+/*   Updated: 2025/07/30 21:20:05 by jdorazio         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include "../inc/philo.h"
+#include "../inc/philo.h"
 
 static void	init_philos(t_sim *data)
 {
 	size_t	i;
 	size_t	num_philos;
 
-	num_philos = data->num_of_philos; 
+	num_philos = data->num_of_philos;
 	i = 0;
 	data->philos = malloc(num_philos * sizeof(t_philo));
 	if (!data->philos)
@@ -26,8 +26,7 @@ static void	init_philos(t_sim *data)
 	{
 		data->philos[i].id = i + 1;
 		data->philos[i].meals_eaten = 0;
-		// data->philos[i].start_time = get_current_time();
-		data->philos[i].last_meal = get_current_time();
+		data->philos[i].last_meal = data->start_time;
 		data->philos[i].data = data;
 		data->philos[i].left_fork = &data->forks[i];
 		data->philos[i].right_fork = &data->forks[(i + 1) % num_philos];
@@ -61,8 +60,8 @@ static void	parse_args(t_sim *data, char **av)
 	data->meals_required = -1;
 	if (av[5])
 		data->meals_required = ft_atoi(av[5]);
-	data->start_time = get_current_time();
 	data->simulation_running = 1;
+	data->start_time = get_current_time() + 100;
 }
 
 void	init_sim(t_sim *data, char **av)

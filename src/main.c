@@ -12,11 +12,36 @@
 
 #include "../inc/philo.h"
 
-// SIMULATION_LOCK
-// PRINT LOCK
-// FORK
-// MEAL LOCK
-void	clear_threads(t_sim *data)
+void	*routine(void *args)
+{
+	t_philo	*philo;
+
+	philo = (t_philo *)args;
+	while (get_current_time() < philo->data->start_time)
+		usleep(50);
+	if (philo->data->num_of_philos == 1)
+	{
+		pthread_mutex_lock(philo->right_fork);
+		print_action("has taken right fork", philo);
+		ft_usleep(philo->data->time_to_die);
+		print_action("died", philo);
+		pthread_mutex_unlock(philo->right_fork);
+		pthread_mutex_lock(&philo->data->simulation_lock);
+		philo->data->simulation_running = 0;
+		return (pthread_mutex_unlock(&philo->data->simulation_lock), NULL);
+	}
+	if (philo->id % 2 == 0)
+		usleep(3000);
+	while (running_sim(philo->data) == 1)
+	{
+		eat(philo);
+		ft_sleep(philo);
+		think(philo);
+	}
+	return (args);
+}
+
+static void	clear_threads(t_sim *data)
 {
 	size_t	i;
 
@@ -34,18 +59,30 @@ void	clear_threads(t_sim *data)
 	}
 	pthread_mutex_destroy(&data->print_lock);
 	pthread_mutex_destroy(&data->simulation_lock);
-}
-
-void	free_program(t_sim *data)
-{
 	free(data->philos);
 	free(data->forks);
 }
 
-void	create_thread(t_sim *data)
+static void	check_av(int ac, char **av)
 {
-	size_t	i;
-	size_t	num_philos;
+	if (ac != 5 && ac != 6)
+		error_message("Number of arguments not 4 or 5.");
+	if (ft_atoi(av[1]) < 1 || ft_atoi(av[1]) > PHILO_MAX)
+		error_message("Num. Philo. must be between 1 - 200");
+	if (ft_atoi(av[2]) <= 0)
+		error_message("time to die must be bigger than 0");
+	if (ft_atoi(av[3]) <= 0)
+		error_message("time to eat must be bigger than 0");
+	if (ft_atoi(av[4]) <= 0)
+		error_message("time to sleep must be bigger than 0");
+	if (av[5] && (ft_atoi(av[5]) < 0))
+		error_message("invalid number of eating times\n");
+}
+
+static void	create_thread(t_sim *data)
+{
+	size_t		i;
+	size_t		num_philos;
 	pthread_t	monitor;
 
 	if (pthread_create(&monitor, NULL, &routine_monitor, data) != 0)
@@ -55,7 +92,7 @@ void	create_thread(t_sim *data)
 	while (i < num_philos)
 	{
 		if (pthread_create(&data->philos[i].thread, NULL,
-			&routine, &data->philos[i]) != 0)
+				&routine, &data->philos[i]) != 0)
 			clear_threads(data);
 		i++;
 	}
@@ -70,7 +107,6 @@ void	create_thread(t_sim *data)
 	}
 }
 
-// ./philo 5 800 200 200 [5]
 int	main(int ac, char **av)
 {
 	t_sim	data;
@@ -79,6 +115,5 @@ int	main(int ac, char **av)
 	init_sim(&data, av);
 	create_thread(&data);
 	clear_threads(&data);
-	free_program(&data);
 	return (0);
 }

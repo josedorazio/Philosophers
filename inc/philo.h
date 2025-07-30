@@ -6,7 +6,7 @@
 /*   By: jdorazio <jdorazio@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/09 22:44:45 by jdorazio          #+#    #+#             */
-/*   Updated: 2025/07/14 16:36:15 by jdorazio         ###   ########.fr       */
+/*   Updated: 2025/07/30 21:27:26 by jdorazio         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,6 @@ void	init_sim(t_sim *data, char **av);
 // ##--- UTILLSINIT ---##
 int		ft_atoi(const char *nptr);
 void	error_message(char *error);
-void	check_av(int ac, char **av);
 size_t	get_current_time(void);
 // ## ---------- ##
 
@@ -76,6 +75,11 @@ void	*routine_monitor(void *args);
 // ##--- UTILLSINIT ---##
 void	*routine(void *args);
 // ## ---------- ##
+
+void	eat(t_philo *philo);
+void	ft_sleep(t_philo *philo);
+void	think(t_philo *philo);
+
 
 size_t	timestamp(t_philo *philo);
 void	print_action(char *s, t_philo *philo);

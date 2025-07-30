@@ -6,11 +6,11 @@
 /*   By: jdorazio <jdorazio@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/11 16:38:14 by jdorazio          #+#    #+#             */
-/*   Updated: 2025/07/13 22:48:26 by jdorazio         ###   ########.fr       */
+/*   Updated: 2025/07/30 21:43:10 by jdorazio         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include "../inc/philo.h"
+#include "../inc/philo.h"
 
 int	ft_atoi(const char *nptr)
 {
@@ -43,29 +43,13 @@ void	error_message(char *error)
 	exit(EXIT_FAILURE);
 }
 
-void	check_av(int ac, char **av)
-{
-	if (ac != 5 && ac != 6)
-		error_message("Number of arguments not 4 or 5.");
-	if (ft_atoi(av[1]) < 1||ft_atoi(av[1]) > PHILO_MAX)
-		error_message("Num. Philo. must be between 1 - 200");
-	if (ft_atoi(av[2]) <= 0)
-		error_message("time to die must be bigger than 0");
-	if (ft_atoi(av[3]) <= 0)
-		error_message("time to eat must be bigger than 0");
-	if (ft_atoi(av[4]) <= 0)
-		error_message("time to sleep must be bigger than 0");
-	if (av[5] && (ft_atoi(av[5]) < 0))
-		error_message("invalid number of eating times\n"); 
-}
-
 size_t	get_current_time(void)
 {
-	struct timeval tv;
+	struct timeval	tv;
 
 	if (gettimeofday(&tv, NULL))
 		error_message("failed to gettimeofday()");
-	return(tv.tv_sec * 1000 + tv.tv_usec / 1000);
+	return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
 }
 
 void	print_action(char *s, t_philo *philo)
@@ -78,11 +62,11 @@ void	print_action(char *s, t_philo *philo)
 		pthread_mutex_unlock(&philo->data->simulation_lock);
 		return ;
 	}
-	pthread_mutex_unlock(&philo->data->simulation_lock);
 	time = get_current_time() - philo->data->start_time ;
 	pthread_mutex_lock(&philo->data->print_lock);
 	printf("[%zu] -> Philo[%d] %s \n", time, philo->id, s);
 	pthread_mutex_unlock(&philo->data->print_lock);
+	pthread_mutex_unlock(&philo->data->simulation_lock);
 }
 
 int	ft_usleep(int mls)
@@ -91,6 +75,6 @@ int	ft_usleep(int mls)
 
 	start = get_current_time();
 	while ((get_current_time() - start) < (size_t) mls)
-		usleep(500);
+		usleep(mls *1000 / 10);
 	return (0);
 }
