@@ -26,6 +26,7 @@ static void	init_philos(t_sim *data)
 	{
 		data->philos[i].id = i + 1;
 		data->philos[i].meals_eaten = 0;
+		// data->philos[i].start_time = get_current_time();
 		data->philos[i].last_meal = get_current_time();
 		data->philos[i].data = data;
 		data->philos[i].left_fork = &data->forks[i];

@@ -14,19 +14,22 @@
 
 static bool	dead_philo(t_philo *philo, t_sim *data)
 {
-	size_t	inact;
+	size_t	time;
 
 	pthread_mutex_lock(&philo->meal_lock);
-	inact = get_current_time() - philo->last_meal;
-	pthread_mutex_unlock(&philo->meal_lock);
-	if (inact >= data->time_to_die)
+	if (get_current_time() - philo->last_meal > data->time_to_die)
 	{
 		pthread_mutex_lock(&data->simulation_lock);
 		data->simulation_running = 0;
+		time = get_current_time() - data->start_time;
 		pthread_mutex_unlock(&data->simulation_lock);
-		print_action(" died. RIP.", philo);
+		pthread_mutex_lock(&data->print_lock);
+		printf("[%zu] -> Philo[%d] died. RIP.\n", time, philo->id);
+		pthread_mutex_unlock(&data->print_lock);
+		pthread_mutex_unlock(&philo->meal_lock);
 		return (true);
 	}
+	pthread_mutex_unlock(&philo->meal_lock);
 	return (false);
 }
 
@@ -34,9 +37,9 @@ static bool	full_philos(t_sim *data)
 {	
 	size_t	i;
 
-	i = 0;
 	if (data->meals_required == -1)
 		return (false);
+	i = 0;
 	while (i < data->num_of_philos)
 	{
 		pthread_mutex_lock(&data->philos[i].meal_lock);
@@ -59,7 +62,9 @@ static int	philo_state(t_sim *data)
 	while (i < data->num_of_philos)
 	{
 		if (dead_philo(&data->philos[i], data))
+		{
 			return (0);
+		}
 		i++;
 	}
 	if (full_philos(data))
@@ -84,7 +89,6 @@ void	*routine_monitor(void *args)
 	{
 		if (!philo_state(data))
 			break;
-		usleep(500);
 	}
-	return (NULL);
+	return ( args);
 }

@@ -79,7 +79,7 @@ void	*routine(void *args);
 
 size_t	timestamp(t_philo *philo);
 void	print_action(char *s, t_philo *philo);
-void	ft_usleep(int mls);
+int	ft_usleep(int mls);
 int	running_sim(t_sim *data);
 
 # endif

@@ -72,17 +72,25 @@ void	print_action(char *s, t_philo *philo)
 {
 	size_t	time;
 
+	pthread_mutex_lock(&philo->data->simulation_lock);
+	if (!philo->data->simulation_running)
+	{
+		pthread_mutex_unlock(&philo->data->simulation_lock);
+		return ;
+	}
+	pthread_mutex_unlock(&philo->data->simulation_lock);
 	time = get_current_time() - philo->data->start_time ;
 	pthread_mutex_lock(&philo->data->print_lock);
-	printf("TS[%zu] -> Philo[%d] %s \n", time, philo->id, s);
+	printf("[%zu] -> Philo[%d] %s \n", time, philo->id, s);
 	pthread_mutex_unlock(&philo->data->print_lock);
 }
 
-void	ft_usleep(int mls)
+int	ft_usleep(int mls)
 {
 	size_t	start;
 
 	start = get_current_time();
 	while ((get_current_time() - start) < (size_t) mls)
-		usleep(10);
+		usleep(500);
+	return (0);
 }

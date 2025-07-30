@@ -17,7 +17,7 @@ SRCS =  src/main.c src/utils.c src/init.c src/actions.c src/monitor.c
 OBJS = $(SRCS:.c=.o)
 
 CC = cc
-CFLAGS = -Wall -Werror -Wextra -Iinc 
+CFLAGS = -Wall -Werror -Wextra -Iinc -pthread
 #-g3 -fsanitize=address
 
 all: $(NAME)

@@ -12,12 +12,14 @@
 
 #include "../inc/philo.h"
 
-void	clear_threads(void *args)
+// SIMULATION_LOCK
+// PRINT LOCK
+// FORK
+// MEAL LOCK
+void	clear_threads(t_sim *data)
 {
-	t_sim	*data;
 	size_t	i;
 
-	data = (t_sim *) args;
 	i = 0;
 	while (i < data->num_of_philos)
 	{
@@ -30,6 +32,7 @@ void	clear_threads(void *args)
 		pthread_mutex_destroy(&data->forks[i]);
 		i++;
 	}
+	pthread_mutex_destroy(&data->print_lock);
 	pthread_mutex_destroy(&data->simulation_lock);
 }
 
@@ -45,41 +48,26 @@ void	create_thread(t_sim *data)
 	size_t	num_philos;
 	pthread_t	monitor;
 
+	if (pthread_create(&monitor, NULL, &routine_monitor, data) != 0)
+		clear_threads(data);
 	i = 0;
 	num_philos = data->num_of_philos;
 	while (i < num_philos)
 	{
 		if (pthread_create(&data->philos[i].thread, NULL,
 			&routine, &data->philos[i]) != 0)
-		{
-
 			clear_threads(data);
-			error_message("falied to create thread");
-		}
 		i++;
 	}
-	if (num_philos > 1)
-		if (pthread_create(&monitor, NULL, &routine_monitor, data) != 0)
-		{
-
-			clear_threads(data);
-			error_message("falied to create thread");
-		}	i = 0;
+	if (pthread_join(monitor, NULL) != 0)
+		clear_threads(data);
+	i = 0;
 	while (i < num_philos)
 	{
 		if (pthread_join(data->philos[i].thread, NULL) != 0)
-		{
-
 			clear_threads(data);
-			error_message("falied to create thread");
-		}		i++;
+		i++;
 	}
-	if (pthread_join(monitor, NULL) != 0)
-		{
-
-			clear_threads(data);
-			error_message("falied to create thread");
-		}
 }
 
 // ./philo 5 800 200 200 [5]
