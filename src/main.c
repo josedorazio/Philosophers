@@ -12,36 +12,42 @@
 
 #include "../inc/philo.h"
 
-void	*routine(void *args)
+int sim_stopped(t_philo *philo)
+{
+	int stop;
+
+	pthread_mutex_lock(&philo->data->simulation_lock);
+	stop = philo->data->stop_sim;
+	pthread_mutex_unlock(&philo->data->simulation_lock);
+	return (stop);
+}
+
+void	*routine_philo(void *args)
 {
 	t_philo	*philo;
 
 	philo = (t_philo *)args;
-	while (get_current_time() < philo->data->start_time)
-		usleep(50);
-	if (philo->data->num_of_philos == 1)
-	{
-		pthread_mutex_lock(philo->right_fork);
-		print_action("has taken right fork", philo);
-		ft_usleep(philo->data->time_to_die);
-		print_action("died", philo);
-		pthread_mutex_unlock(philo->right_fork);
-		pthread_mutex_lock(&philo->data->simulation_lock);
-		philo->data->simulation_running = 0;
-		return (pthread_mutex_unlock(&philo->data->simulation_lock), NULL);
-	}
+	while (now() < philo->data->start_time)
+		usleep(100);
 	if (philo->id % 2 == 0)
-		usleep(3000);
-	while (running_sim(philo->data) == 1)
-	{
-		eat(philo);
-		ft_sleep(philo);
-		think(philo);
-	}
-	return (args);
+		usleep(1000);
+    while (!sim_stopped(philo))
+    {
+			if (philo->data->meals_required != -1 &&
+				philo->meals_eaten >= philo->data->meals_required)
+				break;
+      eat(philo);
+			if (sim_stopped(philo))
+				break;
+      ft_sleep(philo);
+			if (sim_stopped(philo))
+				break;
+      think(philo);
+    }
+    return (NULL);
 }
 
-static void	clear_threads(t_sim *data)
+static void	destroy_all(t_data *data)
 {
 	size_t	i;
 
@@ -63,6 +69,34 @@ static void	clear_threads(t_sim *data)
 	free(data->forks);
 }
 
+static int	create_thread(t_data *data)
+{
+	size_t		i;
+	size_t		num_philos;
+	pthread_t	monitor;
+
+	if (pthread_create(&monitor, NULL, &routine_monitor, data) != 0)
+		return (destroy_all(data), 0);
+	i = 0;
+	num_philos = data->num_of_philos;
+	while (i < num_philos)
+	{
+		if (pthread_create(&data->philos[i].thread, NULL,
+				&routine_philo, &data->philos[i]) != 0)
+			return (destroy_all(data), 0);
+		i++;
+	}
+	if (pthread_join(monitor, NULL) != 0)
+		return (destroy_all(data), 0);
+	i = 0;
+	while (i < num_philos)
+	{
+		if (pthread_join(data->philos[i].thread, NULL) != 0)
+			return (destroy_all(data), 0);
+		i++;
+	}
+	return (1);
+}
 static void	check_av(int ac, char **av)
 {
 	if (ac != 5 && ac != 6)
@@ -79,41 +113,15 @@ static void	check_av(int ac, char **av)
 		error_message("invalid number of eating times\n");
 }
 
-static void	create_thread(t_sim *data)
-{
-	size_t		i;
-	size_t		num_philos;
-	pthread_t	monitor;
-
-	if (pthread_create(&monitor, NULL, &routine_monitor, data) != 0)
-		clear_threads(data);
-	i = 0;
-	num_philos = data->num_of_philos;
-	while (i < num_philos)
-	{
-		if (pthread_create(&data->philos[i].thread, NULL,
-				&routine, &data->philos[i]) != 0)
-			clear_threads(data);
-		i++;
-	}
-	if (pthread_join(monitor, NULL) != 0)
-		clear_threads(data);
-	i = 0;
-	while (i < num_philos)
-	{
-		if (pthread_join(data->philos[i].thread, NULL) != 0)
-			clear_threads(data);
-		i++;
-	}
-}
-
 int	main(int ac, char **av)
 {
-	t_sim	data;
+	t_data	data;
 
 	check_av(ac, av);
-	init_sim(&data, av);
-	create_thread(&data);
-	clear_threads(&data);
-	return (0);
+	if (!init_data(&data,ac, av))
+		return (printf("Initialization error\n"), EXIT_FAILURE);
+	if (!create_thread(&data))
+			return (printf("Thread craetion error\n"), EXIT_FAILURE);
+	destroy_all(&data);
+	return (EXIT_SUCCESS);
 }

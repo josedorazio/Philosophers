@@ -43,38 +43,19 @@ void	error_message(char *error)
 	exit(EXIT_FAILURE);
 }
 
-size_t	get_current_time(void)
+size_t	now(void)
 {
 	struct timeval	tv;
 
-	if (gettimeofday(&tv, NULL))
-		error_message("failed to gettimeofday()");
-	return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
+	gettimeofday(&tv, NULL);
+	return (tv.tv_sec * 1000 + (tv.tv_usec / 1000));
 }
 
-void	print_action(char *s, t_philo *philo)
-{
-	size_t	time;
-
-	pthread_mutex_lock(&philo->data->simulation_lock);
-	if (!philo->data->simulation_running)
-	{
-		pthread_mutex_unlock(&philo->data->simulation_lock);
-		return ;
-	}
-	time = get_current_time() - philo->data->start_time ;
-	pthread_mutex_lock(&philo->data->print_lock);
-	printf("[%zu] -> Philo[%d] %s \n", time, philo->id, s);
-	pthread_mutex_unlock(&philo->data->print_lock);
-	pthread_mutex_unlock(&philo->data->simulation_lock);
-}
-
-int	ft_usleep(int mls)
+void	ft_usleep(size_t mls)
 {
 	size_t	start;
 
-	start = get_current_time();
-	while ((get_current_time() - start) < (size_t) mls)
-		usleep(mls *1000 / 10);
-	return (0);
+	start = now();
+	while ((now() - start) <  mls)
+		usleep(500);
 }

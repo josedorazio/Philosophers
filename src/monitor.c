@@ -12,74 +12,78 @@
 
 #include "../inc/philo.h"
 
-static bool	dead_philo(t_philo *philo, t_sim *data)
+void	print_action(char *s, t_philo *philo)
 {
-	size_t	now;
-	size_t	diff;
+	size_t	time;
 
-	now = get_current_time();
-	pthread_mutex_lock(&philo->meal_lock);
-	if (now >= philo->last_meal)
-		diff = now - philo->last_meal;
-	else
-		diff = 0;
-	if (diff >= data->time_to_die)
-	{
-		pthread_mutex_lock(&data->simulation_lock);
-		data->simulation_running = 0;
-		pthread_mutex_unlock(&data->simulation_lock);
-		pthread_mutex_lock(&data->print_lock);
-		printf("[%zu] -> Philo[%d] died. RIP.\n", now - data->start_time,
-			philo->id);
-		pthread_mutex_unlock(&data->print_lock);
-		pthread_mutex_unlock(&philo->meal_lock);
-		return (true);
-	}
-	pthread_mutex_unlock(&philo->meal_lock);
-	return (false);
+	pthread_mutex_lock(&philo->data->print_lock);
+	time = now() - philo->data->start_time ;
+	if (sim_stopped(philo) == 0)
+		printf("[%zu] -> Philo[%d] %s \n", time, philo->id, s);
+	pthread_mutex_unlock(&philo->data->print_lock);
 }
 
-static bool	full_philos(t_sim *data)
+int	dead_philo(t_philo *philo, size_t time_to_die)
+{
+	int	dead;
+	size_t	time_now;
+	ssize_t diff;
+
+	dead = 0;
+	time_now = now();
+	pthread_mutex_lock(&philo->meal_lock);
+	diff = (ssize_t)time_now - (ssize_t)philo->last_meal;
+  if (philo->is_eating == 0 && (diff >= (ssize_t)time_to_die))
+	{
+		dead = 1;
+		print_action("died", philo);
+ printf("[DEBUG] Philo[%d] died: last_meal=%zu, now=%zu, diff=%zu, time_to_die=%zu, is_eating=%d\n",
+               philo->id, philo->last_meal, time_now, diff, time_to_die, philo->is_eating);
+	}
+  pthread_mutex_unlock(&philo->meal_lock);
+	return (dead);
+}
+
+static int	check_dead_philo(t_data *data)
 {
 	size_t	i;
 
+	i = 0;
+	while (i < data->num_of_philos)
+	{
+		if (dead_philo(&data->philos[i], data->time_to_die) == 1)
+		{
+			pthread_mutex_lock(&data->simulation_lock);
+			data->stop_sim = 1;
+			pthread_mutex_unlock(&data->simulation_lock);
+			return (1);
+		}
+		i++;
+	}
+	return (0);
+}
+
+static bool	check_full_philo(t_data *data)
+{
+	size_t	i;
+	size_t	full_count;
+	
 	if (data->meals_required == -1)
 		return (false);
 	i = 0;
+	full_count = 0;
 	while (i < data->num_of_philos)
 	{
 		pthread_mutex_lock(&data->philos[i].meal_lock);
-		if (data->philos[i].meals_eaten < data->meals_required)
-		{
-			pthread_mutex_unlock(&data->philos[i].meal_lock);
-			return (false);
-		}
+		if (data->philos[i].meals_eaten >= data->meals_required)
+			full_count++;
 		pthread_mutex_unlock(&data->philos[i].meal_lock);
 		i++;
 	}
-	return (true);
-}
-
-static bool	check_dead_philo(t_sim *data)
-{
-	size_t	i;
-
-	i = 0;
-	while (i < data->num_of_philos)
-	{
-		if (dead_philo(&data->philos[i], data))
-			return (true);
-		i++;
-	}
-	return (false);
-}
-
-static bool	check_full_philo(t_sim *data)
-{
-	if (full_philos(data))
+	if (full_count == data->num_of_philos)
 	{
 		pthread_mutex_lock(&data->simulation_lock);
-		data->simulation_running = 0;
+		data->stop_sim = 1;
 		pthread_mutex_unlock(&data->simulation_lock);
 		pthread_mutex_lock(&data->print_lock);
 		printf("All philosophers ate enough\n");
@@ -88,17 +92,20 @@ static bool	check_full_philo(t_sim *data)
 	}
 	return (false);
 }
-
-void	*routine_monitor(void *args)
+void    *routine_monitor(void *args)
 {
-	t_sim	*data;
-
-	data = (t_sim *) args;
-	while (running_sim(data) == 1)
-	{
-		if (check_dead_philo(data) || check_full_philo(data))
-			break ;
-		usleep(1000);
-	}
-	return (args);
+    t_data  *data;
+	
+    data = (t_data *) args;
+		while (now() < data->start_time + 1)
+			usleep(100);
+    while (1)
+    {
+        if (check_dead_philo(data) == 1)
+            return (NULL);
+        if (check_full_philo(data))
+            return (NULL); 
+        usleep(500);
+    }
+    return (NULL);
 }
