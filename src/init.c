@@ -6,36 +6,31 @@
 /*   By: jdorazio <jdorazio@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/19 14:52:42 by jdorazio          #+#    #+#             */
-/*   Updated: 2025/07/13 20:41:27 by jdorazio         ###   ########.fr       */
+/*   Updated: 2025/07/31 16:50:41 by jdorazio         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include "../inc/philo.h"
+#include "../inc/philo.h"
+
+
 
 static int	init_philos(t_data *data)
 {
 	size_t	i;
-	size_t	num_philos;
-	size_t	start;
 
-	num_philos = data->num_of_philos; 
 	i = 0;
-	data->philos = malloc(num_philos * sizeof(t_philo));
+	data->philos = malloc(data->num_of_philos * sizeof(t_philo));
 	if (!data->philos)
 		return (0);
-	start = now();
-	data->start_time = start;
 	while (i < data->num_of_philos)
 	{
 		data->philos[i].id = i + 1;
 		data->philos[i].meals_eaten = 0;
 		data->philos[i].is_eating = 0;
 		data->philos[i].data = data;
-		data->philos[i].last_meal = start;
+		data->philos[i].last_meal = 0;
 		data->philos[i].left_fork = &data->forks[i];
-		data->philos[i].right_fork = &data->forks[(i + 1) % num_philos];
-		if (pthread_mutex_init(&data->philos[i].meal_lock, NULL) != 0)
-			return (0);
+		data->philos[i].right_fork = &data->forks[(i + 1) % data->num_of_philos];
 		i++;
 	}
 	return (1);
@@ -47,7 +42,7 @@ static int	init_forks(t_data *data)
 
 	data->forks = malloc(data->num_of_philos * sizeof(pthread_mutex_t));
 	if (!data->forks)
-			return (0);
+		return (0);
 	i = 0;
 	while (i < data->num_of_philos)
 	{
@@ -67,23 +62,38 @@ static void	parse_args(t_data *data, int ac, char **av)
 	data->meals_required = -1;
 	if (ac == 6)
 		data->meals_required = ft_atoi(av[5]);
-	data->stop_sim = 0;
+	data->philos_ready = 0;
+	data->philos_full = 0;
+	data->start_time = 0;
+	data->sim_finished = false;
+	data->ready_threads = false;
+}
+
+
+static int	init_mutexs(t_data *data)
+{
+	if (init_forks(data) == 0)
+		return (0);
+	if (pthread_mutex_init(&data->sim_lock, NULL) != 0
+	|| pthread_mutex_init(&data->print_lock, NULL) != 0
+	|| pthread_mutex_init(&data->meal_lock, NULL) != 0)
+		return (0);
+	return (1);
 }
 
 int	init_data(t_data *data, int ac, char **av)
 {
-	if (pthread_mutex_init(&data->simulation_lock, NULL) != 0)
-		error_message("failed fork allocation");
-	if (pthread_mutex_init(&data->print_lock, NULL) != 0)
-		pthread_mutex_destroy(&data->simulation_lock);
+	
 	parse_args(data, ac, av);
-	if(!init_forks(data) || !init_philos(data))
+	if (!init_mutexs(data))
+		return (0);
+	if (!init_philos(data))
 	{
 		pthread_mutex_destroy(&data->print_lock);
-		pthread_mutex_destroy(&data->simulation_lock);
+		pthread_mutex_destroy(&data->sim_lock);
 		free(data->forks);
 		free(data->philos);
 		return (0);
-	}	
+	}
 	return (1);
 }

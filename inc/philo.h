@@ -6,7 +6,7 @@
 /*   By: jdorazio <jdorazio@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/09 22:44:45 by jdorazio          #+#    #+#             */
-/*   Updated: 2025/07/30 21:27:26 by jdorazio         ###   ########.fr       */
+/*   Updated: 2025/07/31 16:51:01 by jdorazio         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ typedef struct s_philo
 	// philo id
 	int			id;
 	int		meals_eaten;
-	size_t	last_meal;
+	long	last_meal;
 	int		is_eating;
 	pthread_mutex_t	*left_fork;
 	pthread_mutex_t	*right_fork;
@@ -49,11 +49,16 @@ typedef struct s_data
 	size_t		time_to_eat;
 	size_t		time_to_sleep;
 	int			meals_required;
-	int			stop_sim;
-	size_t		start_time;
+	int			philos_ready;
+	int			philos_full;
+	long		start_time;
+	bool		sim_finished;
+	bool		ready_threads;
 	pthread_mutex_t	*forks;
+	// pthread_mutex_t	threads_mutex;
 	pthread_mutex_t	print_lock;
-	pthread_mutex_t	simulation_lock;
+	pthread_mutex_t	sim_lock;
+	pthread_mutex_t	meal_lock;
 	t_philo		*philos;
 	pthread_t	monitor_thread;
 }	t_data;
@@ -65,7 +70,7 @@ int	init_data(t_data *data, int ac, char **av);
 // ##--- UTILLSINIT ---##
 int		ft_atoi(const char *nptr);
 void	error_message(char *error);
-size_t	now(void);
+long	now(void);
 // ## ---------- ##
 
 // ##--- UTILLSINIT ---##
@@ -85,5 +90,10 @@ size_t	timestamp(t_philo *philo);
 void	print_action(char *s, t_philo *philo);
 
 void	ft_usleep(size_t duration_ms);
-int sim_stopped(t_philo *philo);
+void	set_long(pthread_mutex_t *mutex, long *dest, long value);
+void	increase_int(pthread_mutex_t *mutex, int *var);
+void 	set_bool(pthread_mutex_t *mutex, bool *status);
+bool get_status(pthread_mutex_t *mutex, bool *status);
+bool	sim_stopped(t_philo *philo);
+
 # endif

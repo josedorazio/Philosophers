@@ -6,7 +6,7 @@
 /*   By: jdorazio <jdorazio@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/11 16:38:14 by jdorazio          #+#    #+#             */
-/*   Updated: 2025/07/30 21:43:10 by jdorazio         ###   ########.fr       */
+/*   Updated: 2025/07/31 16:41:15 by jdorazio         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ void	error_message(char *error)
 	exit(EXIT_FAILURE);
 }
 
-size_t	now(void)
+long	now(void)
 {
 	struct timeval	tv;
 
@@ -56,6 +56,6 @@ void	ft_usleep(size_t mls)
 	size_t	start;
 
 	start = now();
-	while ((now() - start) <  mls)
-		usleep(500);
+	while ((now() - start) < mls)
+		usleep(100);
 }
