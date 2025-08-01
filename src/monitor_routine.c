@@ -12,51 +12,52 @@
 
 #include "../inc/philo.h"
 
-void	print_action(char *s, t_philo *philo)
-{
-	long	time;
-
-	pthread_mutex_lock(&philo->data->print_lock);
-	time = now() - philo->data->start_time ;
-	if (sim_stopped(philo) == 0)
-		printf("[%zu] -> Philo[%d] %s \n", time, philo->id, s);
-	pthread_mutex_unlock(&philo->data->print_lock);
-}
-
 static int	dead_philo(t_philo *philo, size_t time_to_die)
 {
 	int		dead;
-	long	time_now;
+	long	elapsed;
 
 	dead = 0;
 	pthread_mutex_lock(&philo->meal_lock);
-	time_now = now() - philo->last_meal;
+	elapsed = get_curr_time() - philo->last_meal;
 	pthread_mutex_unlock(&philo->meal_lock);
-	if (time_now >= (long)time_to_die)
+	if (elapsed > (long)time_to_die)
 	{
 		dead = 1;
-		set_bool(&philo->data->sim_lock, &philo->data->sim_finished);
 		print_action("died", philo);
+		set_status(&philo->data->sim_lock, &philo->data->sim_finished);
 	}
 	return (dead);
 }
 
 static int	check_full_philo(t_data *data)
-{
-	int		status;
-	
-	status = 0;
+{	
 	if (data->meals_required == -1)
-		return (status);
-	
+		return (1);
+	pthread_mutex_lock(&data->meal_lock);
 	if (data->philos_full == (int)data->num_of_philos)
 	{
-		set_bool(&data->sim_lock, &data->sim_finished);
+		set_status(&data->sim_lock, &data->sim_finished);
+		pthread_mutex_unlock(&data->meal_lock);
 		pthread_mutex_lock(&data->print_lock);
-		printf("All philosophers ate enough\n");
-		pthread_mutex_unlock(&data->print_lock);
+		printf("Philos ate enough\n");
+		pthread_mutex_lock(&data->print_lock);
+		return (0);
 	}
-	return (status);
+	pthread_mutex_unlock(&data->meal_lock);
+	return (1);
+}
+
+static bool	threads_ready(pthread_mutex_t *mutex, long *threads, int philo_num)
+{
+	bool	ret;
+
+	ret = false;
+	pthread_mutex_lock(mutex);
+	if (*threads == (long)philo_num)
+		ret = true;
+	pthread_mutex_unlock(mutex);
+	return (ret);
 }
 
 void    *routine_monitor(void *args)
@@ -66,9 +67,9 @@ void    *routine_monitor(void *args)
 	
 	i = 0;
 	data = (t_data *) args;
-	while (data->philos_ready < (int) data->num_of_philos)
+	while (!threads_ready(&data->sim_lock, &data->threads_running_num, data->num_of_philos))
 		usleep(100);
-	while (!sim_stopped(data->philos))
+	while (!program_ended(data->philos))
 	{
 		i = 0;
 		while (i < data->num_of_philos)

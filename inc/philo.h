@@ -34,7 +34,6 @@ typedef struct s_philo
 	int			id;
 	int		meals_eaten;
 	long	last_meal;
-	int		is_eating;
 	pthread_mutex_t	*left_fork;
 	pthread_mutex_t	*right_fork;
 	pthread_mutex_t	meal_lock;
@@ -49,13 +48,12 @@ typedef struct s_data
 	size_t		time_to_eat;
 	size_t		time_to_sleep;
 	int			meals_required;
-	int			philos_ready;
 	int			philos_full;
 	long		start_time;
+	long		threads_running_num;
 	bool		sim_finished;
-	bool		ready_threads;
+	bool		all_threads_ready;
 	pthread_mutex_t	*forks;
-	// pthread_mutex_t	threads_mutex;
 	pthread_mutex_t	print_lock;
 	pthread_mutex_t	sim_lock;
 	pthread_mutex_t	meal_lock;
@@ -63,37 +61,43 @@ typedef struct s_data
 	pthread_t	monitor_thread;
 }	t_data;
 
-// ##--- INIT ---##
-int	init_data(t_data *data, int ac, char **av);
-// ## ---------- ##
 
-// ##--- UTILLSINIT ---##
-int		ft_atoi(const char *nptr);
-void	error_message(char *error);
-long	now(void);
-// ## ---------- ##
 
-// ##--- UTILLSINIT ---##
-void	*routine_monitor(void *args);
-// ## ---------- ##
+// MAIN 
+int	main(int ac, char **av);
 
-// ##--- UTILLSINIT ---##
-void	*routine(void *args);
-// ## ---------- ##
-
+// ACTIONS 
 void	eat(t_philo *philo);
 void	ft_sleep(t_philo *philo);
 void	think(t_philo *philo);
 
+// ERROR
+void	destroy_all(t_data *data);
+void	error_message(char *error);
 
-size_t	timestamp(t_philo *philo);
+// INIT 
+int	init_data(t_data *data, int ac, char **av);
+
+// PHILO ROUTINE (TABLE)
+void	*routine_philo(void *args);
+void	increase_threads(pthread_mutex_t *mutex, long *var);
+
+// MONITOR ROUTINE 
+void    *routine_monitor(void *args);
+
+
+// STATUS FUNCTIONS
+void set_status(pthread_mutex_t *mutex, bool *status);
+bool get_status(pthread_mutex_t *mutex, bool *status);
+void	set_time(pthread_mutex_t *mutex, long *dest, long value);
+long get_time(pthread_mutex_t *mutex, bool *status);
+bool	program_ended(t_philo *philo);
+
+// UTILS 
+int	ft_atoi(const char *nptr);
+long	get_curr_time(void);
+void	ft_usleep(size_t mls, t_philo *philo);
 void	print_action(char *s, t_philo *philo);
 
-void	ft_usleep(size_t duration_ms);
-void	set_long(pthread_mutex_t *mutex, long *dest, long value);
-void	increase_int(pthread_mutex_t *mutex, int *var);
-void 	set_bool(pthread_mutex_t *mutex, bool *status);
-bool get_status(pthread_mutex_t *mutex, bool *status);
-bool	sim_stopped(t_philo *philo);
 
 # endif

@@ -12,8 +12,6 @@
 
 #include "../inc/philo.h"
 
-
-
 static int	init_philos(t_data *data)
 {
 	size_t	i;
@@ -26,7 +24,6 @@ static int	init_philos(t_data *data)
 	{
 		data->philos[i].id = i + 1;
 		data->philos[i].meals_eaten = 0;
-		data->philos[i].is_eating = 0;
 		data->philos[i].data = data;
 		data->philos[i].last_meal = 0;
 		data->philos[i].left_fork = &data->forks[i];
@@ -62,30 +59,22 @@ static void	parse_args(t_data *data, int ac, char **av)
 	data->meals_required = -1;
 	if (ac == 6)
 		data->meals_required = ft_atoi(av[5]);
-	data->philos_ready = 0;
 	data->philos_full = 0;
 	data->start_time = 0;
+	data->threads_running_num = 0;
 	data->sim_finished = false;
-	data->ready_threads = false;
-}
-
-
-static int	init_mutexs(t_data *data)
-{
-	if (init_forks(data) == 0)
-		return (0);
-	if (pthread_mutex_init(&data->sim_lock, NULL) != 0
-	|| pthread_mutex_init(&data->print_lock, NULL) != 0
-	|| pthread_mutex_init(&data->meal_lock, NULL) != 0)
-		return (0);
-	return (1);
+	data->all_threads_ready = false;
 }
 
 int	init_data(t_data *data, int ac, char **av)
 {
 	
 	parse_args(data, ac, av);
-	if (!init_mutexs(data))
+	if (init_forks(data) == 0)
+		return (0);
+	if (pthread_mutex_init(&data->sim_lock, NULL) != 0
+	|| pthread_mutex_init(&data->print_lock, NULL) != 0
+	|| pthread_mutex_init(&data->meal_lock, NULL) != 0)
 		return (0);
 	if (!init_philos(data))
 	{
